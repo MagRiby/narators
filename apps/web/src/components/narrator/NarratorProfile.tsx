@@ -25,21 +25,37 @@ interface Props {
 }
 
 export default function NarratorProfile({ narrator }: Props) {
-  const [hadiths,   setHadiths]   = useState<any>(null);
-  const [page,      setPage]       = useState(1);
-  const [loading,   setLoading]    = useState(false);
-  const [showGraph, setShowGraph]  = useState(false);
+  const [hadiths,    setHadiths]    = useState<any>(null);
+  const [books,      setBooks]      = useState<any[]>([]);
+  const [activeBook, setActiveBook] = useState('');
+  const [page,       setPage]       = useState(1);
+  const [loading,    setLoading]    = useState(false);
+  const [showGraph,  setShowGraph]  = useState(false);
 
-  async function loadHadiths(p: number) {
+  async function loadHadiths(p: number, book = activeBook) {
     setLoading(true);
-    const res = await fetch(`/api/narrators/${narrator.id}/hadiths?page=${p}&limit=20`);
+    const qs = new URLSearchParams({ page: String(p), limit: '20' });
+    if (book) qs.set('book', book);
+    const res = await fetch(`/api/narrators/${narrator.id}/hadiths?${qs}`);
     const data = await res.json();
     setHadiths(data);
     setLoading(false);
   }
 
-  const handleLoadHadiths = () => {
+  async function handleLoadHadiths() {
+    if (books.length === 0) {
+      const res = await fetch(`/api/narrators/${narrator.id}/books`);
+      const data = await res.json();
+      setBooks(data);
+    }
     if (!hadiths) loadHadiths(1);
+  }
+
+  const handleBookFilter = (slug: string) => {
+    const next = slug === activeBook ? '' : slug;
+    setActiveBook(next);
+    setPage(1);
+    loadHadiths(1, next);
   };
 
   const handlePageChange = (p: number) => {
@@ -173,6 +189,35 @@ export default function NarratorProfile({ narrator }: Props) {
             </button>
           )}
         </div>
+
+        {/* Book filter chips */}
+        {books.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            <button
+              onClick={() => handleBookFilter('')}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                activeBook === ''
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              All books
+            </button>
+            {books.map((b: any) => (
+              <button
+                key={b.slug}
+                onClick={() => handleBookFilter(b.slug)}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                  activeBook === b.slug
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                {b.name_en} <span className="opacity-70">({b.count.toLocaleString('en-US')})</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {loading && <div className="flex justify-center py-10"><Spinner /></div>}
 

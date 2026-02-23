@@ -66,15 +66,36 @@ export const getNarrator = async (req: Request, res: Response) => {
   res.json(narrator);
 };
 
+export const getNarratorBooks = async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID' });
+
+  const rows = await prisma.$queryRaw<{ slug: string; name_en: string; name_ar: string; count: bigint }[]>`
+    SELECT b.slug, b.name_en, b.name_ar, COUNT(DISTINCT h.id) AS count
+    FROM books b
+    JOIN hadiths h ON h.book_id = b.id
+    JOIN hadith_narrators hn ON hn.hadith_id = h.id
+    WHERE hn.narrator_id = ${id}
+    GROUP BY b.id, b.slug, b.name_en, b.name_ar
+    ORDER BY count DESC
+  `;
+
+  res.json(rows.map(r => ({ ...r, count: Number(r.count) })));
+};
+
 export const getNarratorHadiths = async (req: Request, res: Response) => {
   const id      = parseInt(req.params.id);
   const pageNum = Math.max(1, parseInt((req.query.page as string) ?? '1'));
   const take    = Math.min(Math.max(1, parseInt((req.query.limit as string) ?? '20')), 100);
   const skip    = (pageNum - 1) * take;
+  const book    = (req.query.book as string) ?? '';
 
   if (isNaN(id)) return res.status(400).json({ error: 'Invalid ID' });
 
-  const where = { narrators: { some: { narrator_id: id } } };
+  const where: any = {
+    narrators: { some: { narrator_id: id } },
+    ...(book ? { book: { slug: book } } : {}),
+  };
 
   const [hadiths, total] = await Promise.all([
     prisma.hadith.findMany({
