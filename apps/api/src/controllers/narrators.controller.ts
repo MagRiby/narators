@@ -7,12 +7,14 @@ export const listNarrators = async (req: Request, res: Response) => {
   const skip    = (pageNum - 1) * take;
   const search  = (req.query.search as string) ?? '';
 
-  const where = search
+  // Without a search query only show narrators with at least 1 hadith link;
+  // with a search query show all (so bio-only kaggle narrators are discoverable).
+  const where: any = search
     ? { OR: [
         { name_ar: { contains: search } },
         { name_en: { contains: search, mode: 'insensitive' as const } },
       ]}
-    : {};
+    : { hadiths: { some: {} } };
 
   const [narrators, total] = await Promise.all([
     prisma.narrator.findMany({
