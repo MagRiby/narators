@@ -1,0 +1,23 @@
+{
+  "name": "hadith-explorer",
+  "private": true,
+  "packageManager": "npm@11.8.0",
+  "workspaces": ["apps/*", "packages/*", "scripts"],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "db:migrate": "npx prisma migrate dev --schema=packages/database/prisma/schema.prisma",
+    "db:generate": "npx prisma generate --schema=packages/database/prisma/schema.prisma",
+    "db:studio": "npx prisma studio --schema=packages/database/prisma/schema.prisma",
+    "db:seed": "npx ts-node scripts/import-hadiths.ts && npx ts-node scripts/import-narrators.ts",
+    "import:hadiths": "npx ts-node scripts/import-hadiths.ts",
+    "import:narrators": "npx ts-node scripts/import-narrators.ts",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.9",
+    "typescript": "^5.4.5",
+    "@types/node": "^20.14.0"
+  }
+}

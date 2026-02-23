@@ -1,0 +1,33 @@
+# Source control
+.git
+.gitignore
+
+# Dependencies (rebuilt inside Docker)
+node_modules
+apps/*/node_modules
+packages/*/node_modules
+
+# Build artefacts
+dist
+.next
+out
+build
+
+# Environment secrets — never bake into image
+.env
+.env.*
+
+# Raw data files (too large; mounted at runtime or imported separately)
+data
+
+# Turbo cache
+.turbo
+
+# Logs & OS noise
+*.log
+.DS_Store
+Thumbs.db
+
+# Editor configs
+.vscode
+.idea

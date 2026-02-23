@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Arabic font from Google Fonts (loaded in layout.tsx) */
+@layer base {
+  :root {
+    --font-arabic: 'Amiri', 'Scheherazade New', serif;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Arabic text direction utility */
+  [dir='rtl'] {
+    font-family: var(--font-arabic);
+  }
+}
+
+@layer utilities {
+  .font-arabic {
+    font-family: var(--font-arabic);
+  }
+
+  /* Line clamp utilities */
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}

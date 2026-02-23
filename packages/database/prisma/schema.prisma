@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+  // Output to the monorepo-root node_modules so all apps share one generated client.
+  // Path is relative to this schema file: packages/database/prisma/ → ../../../
+  output   = "../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────
+// BOOKS
+// ─────────────────────────────────────────────────────────
+model Book {
+  id           Int       @id @default(autoincrement())
+  slug         String    @unique
+  name_ar      String
+  name_en      String
+  author_ar    String?
+  author_en    String?
+  description  String?   @db.Text
+  hadith_count Int       @default(0)
+  chapters     Chapter[]
+  hadiths      Hadith[]
+
+  @@map("books")
+}
+
+// ─────────────────────────────────────────────────────────
+// CHAPTERS
+// ─────────────────────────────────────────────────────────
+model Chapter {
+  id           Int      @id @default(autoincrement())
+  book_id      Int
+  number       Int
+  name_ar      String
+  name_en      String?
+  hadith_count Int      @default(0)
+
+  book    Book     @relation(fields: [book_id], references: [id], onDelete: Cascade)
+  hadiths Hadith[]
+
+  @@unique([book_id, number])
+  @@index([book_id])
+  @@map("chapters")
+}
+
+// ─────────────────────────────────────────────────────────
+// HADITHS
+// ─────────────────────────────────────────────────────────
+model Hadith {
+  id             Int     @id @default(autoincrement())
+  book_id        Int
+  chapter_id     Int?
+  number         Int
+  number_in_book Int?
+  text_ar        String  @db.Text
+  text_en        String? @db.Text
+  grade          Grade?
+  grade_ar       String?
+  reference      String?
+  source_id      String?
+
+  book      Book             @relation(fields: [book_id], references: [id])
+  chapter   Chapter?         @relation(fields: [chapter_id], references: [id])
+  narrators HadithNarrator[]
+
+  @@index([book_id])
+  @@index([chapter_id])
+  @@index([grade])
+  @@index([source_id])
+  @@map("hadiths")
+}
+
+enum Grade {
+  sahih
+  hasan
+  daif
+  mawdu
+  unknown
+}
+
+// ─────────────────────────────────────────────────────────
+// NARRATORS
+// ─────────────────────────────────────────────────────────
+model Narrator {
+  id             Int         @id @default(autoincrement())
+  name_ar        String
+  name_en        String?
+  kunya_ar       String?
+  kunya_en       String?
+  laqab          String?
+  birth_year_h   Int?
+  death_year_h   Int?
+  birth_year_ce  Int?
+  death_year_ce  Int?
+  generation     Generation?
+  region         String?
+  reliability    Reliability?
+  reliability_ar String?
+  biography      String?     @db.Text
+  biography_ar   String?     @db.Text
+  source_id      String?     @unique
+
+  hadiths    HadithNarrator[]
+  as_teacher NarratorRelationship[] @relation("Teacher")
+  as_student NarratorRelationship[] @relation("Student")
+
+  @@index([name_ar])
+  @@index([reliability])
+  @@map("narrators")
+}
+
+enum Generation {
+  sahabi
+  tabii
+  tabi_tabii
+  other
+}
+
+enum Reliability {
+  thiqah
+  saduq
+  daif
+  matruk
+  unknown
+}
+
+// ─────────────────────────────────────────────────────────
+// HADITH ↔ NARRATOR junction
+// ─────────────────────────────────────────────────────────
+model HadithNarrator {
+  hadith_id   Int
+  narrator_id Int
+  position    Int     // 0 = closest to Prophet in chain
+  role        String?
+
+  hadith   Hadith   @relation(fields: [hadith_id], references: [id], onDelete: Cascade)
+  narrator Narrator @relation(fields: [narrator_id], references: [id])
+
+  @@id([hadith_id, narrator_id])
+  @@index([narrator_id])
+  @@map("hadith_narrators")
+}
+
+// ─────────────────────────────────────────────────────────
+// NARRATOR RELATIONSHIPS (isnad graph edges)
+// ─────────────────────────────────────────────────────────
+model NarratorRelationship {
+  teacher_id Int
+  student_id Int
+
+  teacher Narrator @relation("Teacher", fields: [teacher_id], references: [id])
+  student Narrator @relation("Student", fields: [student_id], references: [id])
+
+  @@id([teacher_id, student_id])
+  @@index([teacher_id])
+  @@index([student_id])
+  @@map("narrator_relationships")
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@hadith-explorer/scripts",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "download": "bash download-data.sh",
+    "import:hadiths": "ts-node --project tsconfig.json import-hadiths.ts",
+    "import:narrators": "ts-node --project tsconfig.json import-narrators.ts",
+    "import:all": "npm run import:hadiths && npm run import:narrators"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.14.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "prisma": "^5.14.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
