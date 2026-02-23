@@ -77,7 +77,7 @@ function NarratorRowItem({ narrator, rank }: { narrator: NarratorRow; rank: numb
           ) : '—'}
         </td>
         <td className="py-3 px-4 text-sm font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums text-right">
-          {narrator._count.hadiths.toLocaleString()}
+          {narrator._count.hadiths.toLocaleString('en-US')}
         </td>
       </tr>
 
